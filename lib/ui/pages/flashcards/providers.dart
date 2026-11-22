@@ -74,13 +74,14 @@ class FlashcardSessionState {
   FlashcardSessionItem get current => items[index];
 
   FlashcardSessionState copyWith({
+    List<FlashcardSessionItem>? items,
     int? index,
     bool? answerVisible,
     DateTime? shownAt,
     Map<FlashcardRating, int>? ratings,
   }) {
     return FlashcardSessionState(
-      items: items,
+      items: items ?? this.items,
       index: index ?? this.index,
       answerVisible: answerVisible ?? this.answerVisible,
       shownAt: shownAt ?? this.shownAt,
@@ -135,16 +136,27 @@ class FlashcardSessionNotifier extends AsyncNotifier<FlashcardSessionState> {
     required DateTime now,
   }) async {
     final value = state.requireValue;
+    final currentItem = value.current;
     final undo = await _service.rate(
-      value.current,
+      currentItem,
       rating,
       now: now,
       durationMs: now.difference(value.shownAt).inMilliseconds,
     );
     final ratings = Map<FlashcardRating, int>.from(value.ratings);
     ratings[rating] = ratings[rating]! + 1;
+    final updatedItems = List<FlashcardSessionItem>.from(value.items);
+    if (rating == FlashcardRating.again) {
+      updatedItems.add(
+        FlashcardSessionItem(
+          word: currentItem.word,
+          card: undo.updatedCard ?? currentItem.card,
+        ),
+      );
+    }
     state = AsyncData(
       value.copyWith(
+        items: updatedItems,
         index: value.index + 1,
         answerVisible: false,
         shownAt: DateTime.now(),
@@ -160,8 +172,13 @@ class FlashcardSessionNotifier extends AsyncNotifier<FlashcardSessionState> {
     final value = state.requireValue;
     final ratings = Map<FlashcardRating, int>.from(value.ratings);
     ratings[rating] = ratings[rating]! - 1;
+    final updatedItems = List<FlashcardSessionItem>.from(value.items);
+    if (rating == FlashcardRating.again && updatedItems.length > value.index) {
+      updatedItems.removeLast();
+    }
     state = AsyncData(
       value.copyWith(
+        items: updatedItems,
         index: value.index - 1,
         answerVisible: true,
         ratings: ratings,

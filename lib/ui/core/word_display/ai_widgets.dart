@@ -2,6 +2,7 @@ import "dart:async";
 
 import "package:ciyue/core/providers.dart";
 import "package:ciyue/src/generated/i18n/app_localizations.dart";
+import "package:ciyue/ui/core/custom_context_menu.dart";
 import "package:ciyue/ui/core/e_ink.dart";
 import "package:ciyue/ui/core/word_display/ai_explanation_view.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -53,12 +54,20 @@ class _AIExplainViewState extends ConsumerState<AIExplainView> {
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 720),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: model.structured != null
-                ? AiExplanationView(data: model.structured!)
-                : SelectionArea(child: GptMarkdown(model.explanation!)),
+        child: SelectionArea(
+          onSelectionChanged: ref
+              .read(selectionTextViewModelProvider)
+              .setSelectedText,
+          contextMenuBuilder: buildCustomContextMenu(
+            fallbackText: widget.word,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: model.structured != null
+                  ? AiExplanationView(data: model.structured!)
+                  : GptMarkdown(model.explanation!),
+            ),
           ),
         ),
       ),

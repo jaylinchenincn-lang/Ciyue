@@ -139,9 +139,9 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
   void _syncActiveEntry(
     TabController controller,
     List<int> validDictIds,
-    bool aiExplainWord,
+    bool shouldShowAI,
   ) {
-    final index = controller.index - (aiExplainWord ? 1 : 0);
+    final index = controller.index - (shouldShowAI ? 1 : 0);
     activeEntryDictId = index >= 0 && index < validDictIds.length
         ? validDictIds[index]
         : null;
@@ -323,7 +323,8 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
               );
             }
 
-            final dictsLength = settings.aiExplainWord
+            final shouldShowAI = settings.aiExplainWord && validDictIds.isEmpty;
+            final dictsLength = shouldShowAI
                 ? validDictIds.length + 1
                 : validDictIds.length;
             final showTab = dictsLength > 1;
@@ -332,17 +333,20 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
 
             // Keep a single dictionary entry in the same tab/expansion layout it
             // will use if the next word matches more dictionaries.
-            if (!showTab && validDictIds.isEmpty) {
-              // Only the AI explanation is on screen; there is no entry to
-              // hand the focus back to.
-              activeEntryDictId = null;
+            if (!showTab) {
               final searchBar = _buildSearchBar(settings);
+              final singleChild = shouldShowAI
+                  ? AIExplainView(word: _word)
+                  : _buildWebView(validDictIds[0]);
+              activeEntryDictId = shouldShowAI ? null : validDictIds[0];
+
               return Scaffold(
                 appBar: buildAppBar(
                   context,
                   showTab,
                   title: searchBar,
-                  showAIButtons: settings.aiExplainWord,
+                  showAIButtons: shouldShowAI,
+                  validDictIds: validDictIds,
                 ),
                 bottomNavigationBar:
                     widget.bottomNavigationBar ??
@@ -353,15 +357,13 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
                     ? null
                     : Button(
                         word: _word,
-                        showAIButtons: settings.aiExplainWord,
+                        showAIButtons: shouldShowAI,
                       ),
                 body: SafeArea(
                   top: false,
                   child: Stack(
                     children: [
-                      settings.aiExplainWord
-                          ? AIExplainView(word: _word)
-                          : _buildWebView(validDictIds[0]),
+                      singleChild,
                       const Positioned(
                         left: 16,
                         right: 16,
@@ -379,7 +381,7 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
               if (widget.initialDictId != null) {
                 final targetIndex = validDictIds.indexOf(widget.initialDictId!);
                 if (targetIndex != -1) {
-                  initialTabIndex = settings.aiExplainWord
+                  initialTabIndex = shouldShowAI
                       ? targetIndex + 1
                       : targetIndex;
                 }
@@ -412,7 +414,7 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
                       _tabListener = () => _syncActiveEntry(
                         tabController,
                         validDictIds,
-                        settings.aiExplainWord,
+                        shouldShowAI,
                       );
                       tabController.addListener(_tabListener!);
                     }
@@ -420,7 +422,7 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
                     _syncActiveEntry(
                       tabController,
                       validDictIds,
-                      settings.aiExplainWord,
+                      shouldShowAI,
                     );
                     final searchBar = _buildSearchBar(settings);
 
@@ -428,7 +430,7 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
                       listenable: tabController,
                       builder: (context, child) {
                         final isAIExplainTabSelected =
-                            settings.aiExplainWord && tabController.index == 0;
+                            shouldShowAI && tabController.index == 0;
 
                         return Scaffold(
                           appBar: buildAppBar(
@@ -716,7 +718,7 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         tabs: [
-          if (settings.aiExplainWord) Tab(text: "AI"),
+          if (settings.aiExplainWord && validDictIds.isEmpty) Tab(text: "AI"),
           for (final id in validDictIds)
             Tab(text: dictManager.dicts[id]?.title ?? ""),
         ],
@@ -741,7 +743,7 @@ class _WordDisplayState extends ConsumerState<WordDisplay> {
             settings.themeMode == ThemeMode.system &&
                 MediaQuery.of(context).platformBrightness == Brightness.light);
     final children = <Widget>[
-      if (settings.aiExplainWord)
+      if (settings.aiExplainWord && validDictIds.isEmpty)
         KeepAliveWidget(
           key: ValueKey("ai_tab_$groupId"),
           child: AIExplainView(word: _word),

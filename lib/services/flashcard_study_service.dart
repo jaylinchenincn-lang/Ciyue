@@ -12,8 +12,13 @@ class FlashcardSessionItem {
 class FlashcardUndoToken {
   final db.Flashcard previousCard;
   final int logId;
+  final domain.Flashcard? updatedCard;
 
-  const FlashcardUndoToken({required this.previousCard, required this.logId});
+  const FlashcardUndoToken({
+    required this.previousCard,
+    required this.logId,
+    this.updatedCard,
+  });
 }
 
 class FlashcardStudyService {
@@ -93,7 +98,11 @@ class FlashcardStudyService {
       reviewedAt: result.reviewedAt,
       durationMs: result.durationMs,
     );
-    return FlashcardUndoToken(previousCard: previous, logId: logId);
+    return FlashcardUndoToken(
+      previousCard: previous,
+      logId: logId,
+      updatedCard: result.card,
+    );
   }
 
   Future<void> undo(FlashcardUndoToken token) =>

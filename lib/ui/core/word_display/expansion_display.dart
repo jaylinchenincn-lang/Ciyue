@@ -98,7 +98,7 @@ class _ExpansionWordDisplayState extends ConsumerState<ExpansionWordDisplay> {
   }
 
   List<Object> _getPanelIds(bool includeAI, List<int> validDictIds) => [
-    if (includeAI) "ai",
+    if (includeAI && validDictIds.isEmpty) "ai",
     ...validDictIds.map((id) => "dict:$id"),
   ];
 
@@ -128,8 +128,9 @@ class _ExpansionWordDisplayState extends ConsumerState<ExpansionWordDisplay> {
 
     final panels = <ExpansionPanel>[];
     int panelIndex = 0;
+    final shouldShowAI = settings.aiExplainWord && widget.validDictIds.isEmpty;
 
-    if (settings.aiExplainWord) {
+    if (shouldShowAI) {
       panels.add(
         ExpansionPanel(
           headerBuilder: (context, isExpanded) {
@@ -166,7 +167,7 @@ class _ExpansionWordDisplayState extends ConsumerState<ExpansionWordDisplay> {
     }
 
     final isAIExplainTabSelected =
-        settings.aiExplainWord && _isExpanded.isNotEmpty && _isExpanded[0];
+        shouldShowAI && _isExpanded.isNotEmpty && _isExpanded[0];
 
     final searchBar = _buildSearchBar(settings);
     final isDesktopScreen = app_utils.isLargeScreen(context);

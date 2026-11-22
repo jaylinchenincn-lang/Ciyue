@@ -1,5 +1,6 @@
 import "package:ciyue/models/ai_explanation_data.dart";
 import "package:ciyue/src/generated/i18n/app_localizations.dart";
+import "package:go_router/go_router.dart";
 import "package:material_ui/material_ui.dart";
 
 class AiExplanationView extends StatelessWidget {
@@ -173,13 +174,19 @@ class AiExplanationView extends StatelessWidget {
 
   Widget _chip(BuildContext context, String text) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: () {
+        context.push("/word/${Uri.encodeComponent(text)}");
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(text, style: theme.textTheme.bodySmall),
       ),
-      child: Text(text, style: theme.textTheme.bodySmall),
     );
   }
 }

@@ -203,17 +203,7 @@ class _FlashcardStudyPageState extends ConsumerState<FlashcardStudyPage> {
 
   Future<void> _rate(FlashcardRating rating) async {
     final notifier = ref.read(flashcardSessionProvider(widget.tag).notifier);
-    final undo = await notifier.rate(rating, now: DateTime.now().toUtc());
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      buildRatingSavedSnackBar(
-        l10n: l10n,
-        onUndo: () => notifier.undo(undo, rating),
-      ),
-    );
+    await notifier.rate(rating, now: DateTime.now().toUtc());
   }
 
   Widget _buildSummary(FlashcardSessionState state) {
@@ -230,7 +220,11 @@ class _FlashcardStudyPageState extends ConsumerState<FlashcardStudyPage> {
               l10n.flashcardsSessionComplete,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            Text(l10n.flashcardsCardsReviewed(state.items.length)),
+            Text(
+              l10n.flashcardsCardsReviewed(
+                state.items.map((e) => e.word).toSet().length,
+              ),
+            ),
             Text(
               l10n.flashcardsMinutes(
                 DateTime.now().difference(state.startedAt).inMinutes,
