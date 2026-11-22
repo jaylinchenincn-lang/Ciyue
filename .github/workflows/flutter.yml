@@ -1,4 +1,4 @@
-name: Flutter
+name: Android Build
 
 on:
   push:
@@ -7,72 +7,9 @@ on:
       - "docs/**"
       - "frontend/**"
       - "assets/web/**"
-  pull_request:
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - "frontend/**"
-      - "assets/web/**"
+  workflow_dispatch:
 
 jobs:
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          submodules: recursive
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: 3.50.0
-          cache: true
-
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libgtk-3-dev \
-            libx11-dev \
-            libxi-dev \
-            pkg-config
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      # gen-l10n validates the ICU syntax and the placeholders of every
-      # locale; check_arb_keys.dart then rejects duplicated keys, keys dropped
-      # from the template, a missing or mismatching @@locale, and a generated
-      # supportedLocales list that is out of sync. Untranslated strings are
-      # reported but do not fail the build, since coverage changes constantly.
-      - name: Check translations
-        run: |
-          flutter gen-l10n
-          dart tools/check_arb_keys.dart
-
-      - name: Format
-        shell: bash
-        run: |
-          set -euo pipefail
-          base_ref="${{ github.event.pull_request.base.sha || github.event.before }}"
-          if ! git rev-parse --verify "$base_ref^{commit}" >/dev/null 2>&1; then
-            base_ref="HEAD^"
-          fi
-
-          mapfile -t dart_files < <(
-            git diff --name-only --diff-filter=ACMRTUXB "$base_ref" HEAD -- '*.dart' |
-              grep -Ev '^(lib/src/generated/i18n|packages/flutter_inappwebview_linux)/' || true
-          )
-          if ((${#dart_files[@]})); then
-            dart format --output=none --set-exit-if-changed "${dart_files[@]}"
-          fi
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Test
-        run: flutter test
-
   build-android:
     uses: ./.github/workflows/android-build.yml
     secrets: inherit
@@ -84,34 +21,5 @@ jobs:
       enable_build_cache: true
       enable_gradle_cache: true
       signing_required: false
-      include_metadata_defines: true
-      include_dev_define: true
-
-  build-windows:
-    uses: ./.github/workflows/windows-build.yml
-    with:
-      flutter_version: 3.50.0
-      workflow_profile: ci
-      artifact_name: Windows
-      enable_build_cache: true
-      include_metadata_defines: true
-      include_dev_define: true
-      package_release_artifacts: false
-
-  build-linux:
-    uses: ./.github/workflows/linux-build.yml
-    with:
-      flutter_version: 3.50.0
-      workflow_profile: ci
-      artifact_name: Linux
-      include_metadata_defines: true
-      include_dev_define: true
-
-  build-macos:
-    uses: ./.github/workflows/macos-build.yml
-    with:
-      flutter_version: 3.50.0
-      workflow_profile: ci
-      artifact_name: macOS
       include_metadata_defines: true
       include_dev_define: true
