@@ -261,12 +261,16 @@ Future<void> initApp({bool isFloatingWindow = false}) async {
   final stopWatch = Stopwatch()..start();
 
   if (!isFloatingWindow) {
-    await SimpleSecureStorage.initialize(
-      const InitializationOptions(
-        appName: "Ciyue",
-        namespace: "ciyue_secure_store",
-      ),
-    );
+    try {
+      await SimpleSecureStorage.initialize(
+        const InitializationOptions(
+          appName: "Ciyue",
+          namespace: "ciyue_secure_store",
+        ),
+      );
+    } catch (error, stackTrace) {
+      talker.error("Failed to initialize secure storage", error, stackTrace);
+    }
   }
 
   await initPrefs();

@@ -120,10 +120,15 @@ void main(List<String> args) async {
         talker.error("Invalid macOS command line: ${error.message}");
       }
     });
-  } catch (e) {
+  } catch (e, stackTrace) {
+    talker.error("Failed to initialize main app", e, stackTrace);
     runApp(
       ProviderScope(
-        child: MaterialApp(home: CiyueError(error: e)),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: CiyueError(error: e),
+        ),
       ),
     );
   }
@@ -202,7 +207,11 @@ void floatingWindow(List<String> args) async {
     talker.error("Failed to initialize floating window", error, stackTrace);
     runApp(
       ProviderScope(
-        child: MaterialApp(home: CiyueError(error: error)),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: CiyueError(error: error),
+        ),
       ),
     );
   }

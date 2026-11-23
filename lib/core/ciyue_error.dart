@@ -12,9 +12,14 @@ class CiyueError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    final errorTitle = l10n?.error ?? "Error";
+    final reportIssueText = l10n?.reportIssue ?? "Report Issue";
+    final copyErrorText = l10n?.copyError ?? "Copy Error";
+    final copiedText = l10n?.errorCopiedToClipboard ?? "Error copied to clipboard";
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.error)),
+      appBar: AppBar(title: Text(errorTitle)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -29,7 +34,7 @@ class CiyueError extends StatelessWidget {
                   ),
                 );
               },
-              child: Text(l10n.reportIssue),
+              child: Text(reportIssueText),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
@@ -38,10 +43,10 @@ class CiyueError extends StatelessWidget {
                   Clipboard.setData(ClipboardData(text: error.toString())),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.errorCopiedToClipboard)),
+                  SnackBar(content: Text(copiedText)),
                 );
               },
-              child: Text(l10n.copyError),
+              child: Text(copyErrorText),
             ),
           ],
         ),
